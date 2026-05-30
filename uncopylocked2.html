@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNCOPYLOCKED.NET</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#080c1a; --bg2:#0d1428;
+  --glass:rgba(18,32,75,0.3); --glass-b:rgba(80,140,255,0.28); --shine:rgba(255,255,255,0.07);
+  --blur:blur(14px); --acc:#4a9eff; --acc2:#a855f7; --glow:rgba(74,158,255,0.45);
+  --text:#dce8ff; --muted:#6b7eb5; --blue:#1d9bf0; --purple:#c084fc;
+  --green:#22c55e; --red:#ef4444; --yellow:#eab308;
+  --card:rgba(12,20,55,0.48); --r:14px;
+}
+[data-theme="light"] {
+  --bg:#e2ecf7; --bg2:#d5e4f2; --glass:rgba(200,220,255,0.38); --glass-b:rgba(80,140,255,0.32);
+  --shine:rgba(255,255,255,0.55); --text:#0d1a38; --muted:#4a5e90; --card:rgba(175,205,245,0.48);
+}
+[data-aero="off"] .glass, [data-aero="off"] .file-card,
+[data-aero="off"] .sc, [data-aero="off"] .mi,
+[data-aero="off"] .panel { backdrop-filter:none!important; -webkit-backdrop-filter:none!important; }
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 60% 45% at 15% 25%,rgba(74,158,255,.07) 0%,transparent 70%),
+             radial-gradient(ellipse 50% 40% at 85% 75%,rgba(168,85,247,.05) 0%,transparent 70%);}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:rgba(255,255,255,.03);}
+::-webkit-scrollbar-thumb{background:rgba(74,158,255,.25);border-radius:3px;}
+
+/* Glass utility */
+.glass{background:var(--glass);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--glass-b);}
+
+/* ── LOADING ── */
+#loading{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#080c1a;gap:14px;}
+.ll{font-family:'Orbitron',sans-serif;font-size:1.7rem;font-weight:900;color:var(--acc);text-shadow:0 0 30px var(--glow);animation:pulse 1.4s ease infinite;}
+@keyframes pulse{0%,100%{opacity:.65}50%{opacity:1}}
+.lb{width:200px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;}
+.lf{height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));border-radius:2px;animation:load 1.5s ease-out forwards;}
+@keyframes load{from{width:0}to{width:100%}}
+.lt{font-size:.76rem;color:var(--muted);letter-spacing:3px;}
+
+/* ── ANIMATIONS ── */
+@keyframes slideUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── INPUT / BTN ── */
+.inp{width:100%;padding:12px 16px;background:rgba(255,255,255,.055);border:1px solid rgba(74,158,255,.22);
+  border-radius:10px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:1rem;margin-bottom:12px;outline:none;transition:all .2s;}
+.inp:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(74,158,255,.12);}
+select.inp{padding:11px 16px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px 22px;border:none;border-radius:10px;
+  cursor:pointer;font-family:'Orbitron',sans-serif;font-size:.76rem;font-weight:700;letter-spacing:1px;transition:all .2s;text-decoration:none;}
+.bfw{width:100%;}
+.bp{background:var(--acc);color:#fff;}
+.bp:hover{background:#5aabff;box-shadow:0 0 22px rgba(74,158,255,.5);transform:translateY(-1px);}
+.bs{background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.4);color:var(--green);}
+.bs:hover{background:rgba(34,197,94,.24);}
+.br{background:rgba(239,68,68,.14);border:1px solid rgba(239,68,68,.4);color:var(--red);}
+.br:hover{background:rgba(239,68,68,.24);}
+.xb{background:transparent;border:none;color:var(--muted);font-size:1.15rem;cursor:pointer;transition:color .2s;line-height:1;flex-shrink:0;}
+.xb:hover{color:var(--text);}
+.hidden{display:none!important;}
+
+/* ── LOGIN OVERLAY ── */
+#lo{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:rgba(4,7,18,.94);backdrop-filter:blur(24px);}
+.lcard{background:rgba(10,16,40,.92);border:1px solid rgba(74,158,255,.37);border-radius:22px;padding:42px 40px;width:420px;max-width:94vw;
+  box-shadow:0 0 80px rgba(74,158,255,.12),inset 0 1px 0 var(--shine);backdrop-filter:blur(24px);animation:slideUp .4s ease;}
+.llogo{font-family:'Orbitron',sans-serif;font-size:1.35rem;font-weight:900;color:var(--acc);text-shadow:0 0 20px var(--glow);margin-bottom:4px;}
+.lsub{font-size:.8rem;color:var(--muted);margin-bottom:24px;}
+.atabs{display:flex;gap:3px;padding:4px;background:rgba(255,255,255,.05);border-radius:10px;margin-bottom:20px;}
+.atb{flex:1;padding:9px;border:none;background:transparent;color:var(--muted);border-radius:7px;cursor:pointer;
+  font-family:'Rajdhani',sans-serif;font-size:.94rem;font-weight:700;transition:all .2s;letter-spacing:.5px;}
+.atb.on{background:var(--acc);color:#fff;box-shadow:0 2px 12px rgba(74,158,255,.4);}
+.rlink{text-align:center;margin-top:14px;}
+.rlink button{background:transparent;border:none;color:rgba(255,255,255,.28);font-family:'Rajdhani',sans-serif;
+  font-size:.86rem;cursor:pointer;text-decoration:underline;transition:color .2s;}
+.rlink button:hover{color:rgba(255,255,255,.5);}
+.notok{padding:11px 13px;border-radius:9px;font-size:.8rem;display:flex;align-items:flex-start;gap:8px;margin-top:12px;}
+.nok{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.3);color:var(--green);}
+
+/* ── VERIFY BANNER ── */
+#vb{position:fixed;top:0;left:0;right:0;z-index:600;background:rgba(192,132,252,.11);
+  border-bottom:1px solid rgba(192,132,252,.35);backdrop-filter:blur(12px);
+  padding:10px 20px;display:flex;align-items:center;justify-content:center;gap:10px;
+  color:var(--purple);font-size:.88rem;font-weight:700;}
+#vb .vx{position:absolute;right:16px;background:transparent;border:none;color:var(--purple);cursor:pointer;font-size:1rem;opacity:.7;transition:opacity .2s;}
+#vb .vx:hover{opacity:1;}
+
+/* ── HEADER ── */
+header{position:sticky;top:0;z-index:400;background:rgba(7,10,24,.88);backdrop-filter:blur(18px);
+  border-bottom:1px solid rgba(74,158,255,.15);height:60px;padding:0 20px;display:flex;align-items:center;gap:12px;}
+.logo{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:900;color:var(--acc);text-shadow:0 0 16px var(--glow);white-space:nowrap;}
+nav{display:flex;gap:2px;flex:1;}
+nav a{padding:6px 12px;color:var(--muted);text-decoration:none;font-weight:700;font-size:.84rem;border-radius:7px;transition:all .2s;display:flex;align-items:center;gap:5px;white-space:nowrap;}
+nav a:hover,nav a.on{color:var(--text);background:rgba(74,158,255,.1);}
+.sw{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.05);border:1px solid rgba(74,158,255,.18);border-radius:8px;padding:6px 12px;width:190px;transition:all .2s;}
+.sw:focus-within{border-color:rgba(74,158,255,.5);}
+.sw input{background:none;border:none;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:.86rem;outline:none;width:100%;}
+.ua{display:flex;align-items:center;gap:7px;margin-left:auto;}
+.ib{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(74,158,255,.18);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:all .2s;font-size:.9rem;user-select:none;}
+.ib:hover{color:var(--text);background:rgba(74,158,255,.12);}
+.uc{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.05);border:1px solid rgba(74,158,255,.18);
+  border-radius:8px;padding:5px 11px;font-size:.86rem;font-weight:700;cursor:pointer;transition:background .2s;}
+.uc:hover{background:rgba(74,158,255,.1);}
+.av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--acc2));
+  display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff;flex-shrink:0;}
+.vb{color:var(--blue);font-size:.78rem;}
+
+/* ── MAIN ── */
+main{display:flex;gap:20px;padding:20px;max-width:1380px;margin:0 auto;position:relative;z-index:1;}
+.content{flex:1;min-width:0;}
+.sidebar{width:270px;flex-shrink:0;}
+
+/* ── CAT BAR ── */
+.catbar{display:flex;gap:7px;overflow-x:auto;padding-bottom:14px;margin-bottom:18px;border-bottom:1px solid rgba(74,158,255,.1);}
+.catbar::-webkit-scrollbar{height:0;}
+.catb{padding:6px 16px;border-radius:20px;flex-shrink:0;border:1px solid rgba(74,158,255,.22);background:transparent;
+  color:var(--muted);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.84rem;cursor:pointer;transition:all .2s;}
+.catb:hover,.catb.on{background:var(--acc);border-color:var(--acc);color:#fff;}
+.sec{font-family:'Orbitron',sans-serif;font-size:.72rem;letter-spacing:2.5px;color:var(--muted);margin-bottom:13px;}
+
+/* ── FILE GRID ── */
+.fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:13px;}
+
+/* ── FILE CARD (AERO GLASS MOSAIC) ── */
+.fc{position:relative;border-radius:var(--r);overflow:hidden;cursor:pointer;
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);
+  background:var(--card);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(80,130,255,.2);
+  box-shadow:0 2px 12px rgba(0,0,0,.28),inset 0 1px 0 var(--shine);
+  animation:fadeUp .4s ease both;}
+.fc::before{content:'';position:absolute;top:0;left:0;right:0;height:44%;
+  background:linear-gradient(180deg,var(--shine) 0%,transparent 100%);
+  border-radius:var(--r) var(--r) 0 0;pointer-events:none;z-index:2;}
+.fc::after{content:'';position:absolute;inset:0;border-radius:var(--r);
+  background:linear-gradient(135deg,rgba(255,255,255,.07) 0%,transparent 35%,transparent 65%,rgba(255,255,255,.04) 100%);
+  pointer-events:none;z-index:1;}
+.cg{position:absolute;inset:0;pointer-events:none;z-index:0;border-radius:var(--r);
+  background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(74,158,255,.24) 0%,transparent 55%);
+  opacity:0;transition:opacity .3s;}
+.fc:hover{border-color:rgba(74,158,255,.58);transform:translateY(-4px);
+  box-shadow:0 8px 28px rgba(74,158,255,.3),0 0 0 1px rgba(74,158,255,.28),inset 0 1px 0 var(--shine);}
+.fc:hover .cg{opacity:1;}
+.fc:nth-child(1){animation-delay:.05s}.fc:nth-child(2){animation-delay:.10s}
+.fc:nth-child(3){animation-delay:.15s}.fc:nth-child(4){animation-delay:.20s}
+.fc:nth-child(5){animation-delay:.25s}.fc:nth-child(6){animation-delay:.30s}
+.fc:nth-child(7){animation-delay:.35s}.fc:nth-child(8){animation-delay:.40s}
+
+.ft{width:100%;aspect-ratio:4/3;background:linear-gradient(135deg,rgba(18,38,88,.72),rgba(6,14,48,.88));
+  display:flex;align-items:center;justify-content:center;font-size:2.7rem;position:relative;z-index:3;
+  border-bottom:1px solid rgba(74,158,255,.1);}
+.fi{padding:10px 12px;position:relative;z-index:3;}
+.fn{font-weight:700;font-size:.87rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fe{font-size:.69rem;color:var(--muted);margin-top:3px;font-weight:500;letter-spacing:.4px;}
+.ff{display:flex;align-items:center;justify-content:space-between;margin-top:6px;}
+.fdl{font-size:.72rem;color:var(--muted);}
+.bpend{font-size:.64rem;padding:2px 6px;border-radius:4px;background:rgba(234,179,8,.14);border:1px solid rgba(234,179,8,.35);color:var(--yellow);}
+
+/* ── SIDEBAR CARD ── */
+.sc{background:var(--glass);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  border:1px solid var(--glass-b);border-radius:var(--r);padding:18px;margin-bottom:13px;
+  background-image:linear-gradient(180deg,var(--shine) 0%,transparent 100%);
+  box-shadow:inset 0 1px 0 var(--shine);}
+.ch{font-family:'Orbitron',sans-serif;font-size:.68rem;letter-spacing:2px;color:var(--muted);margin-bottom:13px;text-transform:uppercase;}
+.bn{font-family:'Orbitron',sans-serif;font-size:2rem;font-weight:700;color:var(--acc);}
+.dlb{height:4px;background:rgba(255,255,255,.07);border-radius:2px;margin:10px 0;overflow:hidden;}
+.dlf{height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));border-radius:2px;width:0%;transition:width .6s ease;}
+
+/* ── MODAL ── */
+.mover{position:fixed;inset:0;z-index:700;background:rgba(4,7,18,.87);backdrop-filter:blur(10px);
+  display:flex;align-items:center;justify-content:center;}
+.mi{background:rgba(8,12,30,.97);border:1px solid rgba(74,158,255,.3);border-radius:20px;
+  width:680px;max-width:96vw;max-height:88vh;overflow-y:auto;
+  box-shadow:0 0 80px rgba(74,158,255,.1);backdrop-filter:blur(24px);
+  background-image:linear-gradient(180deg,rgba(74,158,255,.03) 0%,transparent 100%);}
+.mh{padding:20px 22px;border-bottom:1px solid rgba(74,158,255,.12);display:flex;align-items:flex-start;justify-content:space-between;gap:14px;}
+.mt{font-family:'Orbitron',sans-serif;font-size:1rem;color:var(--text);}
+.ms{font-size:.76rem;color:var(--muted);margin-top:4px;}
+.mb{padding:22px;}
+.tlg{width:100%;height:148px;border-radius:12px;margin-bottom:17px;display:flex;align-items:center;justify-content:center;font-size:4rem;
+  background:linear-gradient(135deg,rgba(18,38,88,.62),rgba(6,14,48,.82));border:1px solid rgba(74,158,255,.15);}
+.dlbtn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));border:none;border-radius:10px;color:#fff;
+  font-family:'Orbitron',sans-serif;font-size:.74rem;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .2s;margin-bottom:20px;}
+.dlbtn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(74,158,255,.4);}
+.ar{display:flex;gap:7px;margin-bottom:14px;}
+.rch{font-family:'Orbitron',sans-serif;font-size:.7rem;letter-spacing:2px;color:var(--muted);margin-bottom:13px;}
+.rcard{background:rgba(255,255,255,.03);border:1px solid rgba(74,158,255,.1);border-radius:10px;padding:14px;margin-bottom:9px;}
+.rau{font-weight:700;font-size:.86rem;color:var(--acc);display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.rst{color:var(--yellow);font-size:.78rem;margin-bottom:5px;}
+.rtx{font-size:.86rem;color:var(--muted);line-height:1.55;}
+.addrev{margin-top:18px;padding-top:18px;border-top:1px solid rgba(74,158,255,.1);}
+.srow{display:flex;gap:4px;margin-bottom:9px;}
+.sb{background:transparent;border:none;font-size:1.3rem;cursor:pointer;color:rgba(255,255,255,.16);transition:color .1s;}
+.sb.on{color:var(--yellow);}
+
+/* ── PANELS ── */
+.panel{position:fixed;top:60px;bottom:0;width:295px;z-index:500;background:rgba(5,9,22,.97);
+  backdrop-filter:blur(22px);padding:20px 18px;overflow-y:auto;transition:transform .3s cubic-bezier(.4,0,.2,1);}
+#sp{right:0;border-left:1px solid rgba(74,158,255,.18);transform:translateX(106%);}
+#sp.open{transform:translateX(0);}
+#ap{left:0;border-right:1px solid rgba(239,68,68,.25);transform:translateX(-106%);}
+#ap.open{transform:translateX(0);}
+.ph{font-family:'Orbitron',sans-serif;font-size:.8rem;letter-spacing:2px;margin-bottom:20px;}
+.srow2{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.slb{font-size:.9rem;font-weight:600;}
+.ssb{font-size:.7rem;color:var(--muted);margin-top:2px;}
+.tog{position:relative;width:42px;height:23px;flex-shrink:0;}
+.tog input{opacity:0;width:0;height:0;}
+.tt{position:absolute;inset:0;background:rgba(255,255,255,.08);border-radius:12px;cursor:pointer;border:1px solid rgba(255,255,255,.08);transition:background .2s;}
+.tog input:checked + .tt{background:var(--acc);}
+.tt::after{content:'';position:absolute;width:17px;height:17px;background:#fff;border-radius:50%;top:2px;left:2px;transition:transform .2s;}
+.tog input:checked + .tt::after{transform:translateX(19px);}
+.admi{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:12px;margin-bottom:9px;}
+.aar{display:flex;gap:7px;margin-top:9px;}
+.urow{display:flex;align-items:center;gap:9px;margin-bottom:9px;}
+.pnote{display:flex;align-items:flex-start;gap:9px;background:rgba(234,179,8,.07);border:1px solid rgba(234,179,8,.2);
+  border-radius:9px;padding:10px 13px;font-size:.78rem;color:var(--yellow);margin-bottom:13px;}
+
+/* ── UPLOAD ── */
+.uinner{background:rgba(8,12,30,.98);border:1px solid rgba(74,158,255,.3);border-radius:20px;width:500px;max-width:96vw;padding:28px;}
+.dz{border:2px dashed rgba(74,158,255,.28);border-radius:12px;padding:34px;text-align:center;color:var(--muted);cursor:pointer;margin-bottom:13px;transition:all .2s;font-size:.86rem;}
+.dz:hover{border-color:var(--acc);background:rgba(74,158,255,.05);color:var(--text);}
+.si{padding:11px 13px;background:rgba(74,158,255,.07);border:1px solid rgba(74,158,255,.2);border-radius:9px;margin-bottom:12px;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:22px;right:22px;z-index:9000;background:rgba(8,12,30,.97);
+  border:1px solid rgba(74,158,255,.3);border-radius:12px;padding:13px 18px;
+  font-size:.87rem;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,.4);
+  transform:translateX(115%);transition:transform .3s cubic-bezier(.34,1.56,.64,1);max-width:275px;}
+.toast.show{transform:translateX(0);}
+.tok{border-color:rgba(34,197,94,.4);color:var(--green);}
+.terr{border-color:rgba(239,68,68,.4);color:var(--red);}
+.tinf{border-color:rgba(74,158,255,.4);color:var(--acc);}
+</style>
+</head>
+<body data-theme="dark" data-aero="on">
+
+<div id="loading">
+  <div class="ll">UNCOPYLOCKED</div>
+  <div class="lb"><div class="lf"></div></div>
+  <div class="lt">CARGANDO ARCHIVOS...</div>
+</div>
+
+<div id="lo" class="hidden">
+  <div class="lcard">
+    <div class="llogo">UNCOPYLOCKED.NET</div>
+    <div class="lsub">Plataforma de archivos Roblox desprotegidos</div>
+    <div class="atabs">
+      <button class="atb on" id="t1" onclick="switchTab('login')">Iniciar Sesión</button>
+      <button class="atb" id="t2" onclick="switchTab('register')">Registrarse</button>
+    </div>
+    <div id="fl">
+      <input class="inp" type="email" id="le" placeholder="Correo electrónico">
+      <input class="inp" type="password" id="lp" placeholder="Contraseña">
+      <button class="btn bp bfw" onclick="doLogin()">ENTRAR</button>
+      <div class="rlink"><button onclick="switchTab('register')">Crear una cuenta nueva</button></div>
+    </div>
+    <div id="fr" class="hidden">
+      <input class="inp" type="text" id="rn" placeholder="Nombre de usuario">
+      <input class="inp" type="email" id="re" placeholder="Correo electrónico">
+      <input class="inp" type="password" id="rp" placeholder="Contraseña">
+      
+      <div style="margin-bottom:12px;background:rgba(255,255,255,.03);padding:10px;border-radius:10px;border:1px dashed rgba(74,158,255,.3);">
+        <div style="font-size:.75rem;color:var(--muted);margin-bottom:6px;">📸 Sube una foto de perfil para verificación automática:</div>
+        <input type="file" id="rpic" accept="image/*" style="font-size:.8rem;color:var(--text);">
+      </div>
+
+      <button class="btn bp bfw" onclick="doRegister()">CREAR CUENTA</button>
+      <div id="rok" class="notok nok hidden">✉️ Cuenta creada y verificada.</div>
+    </div>
+  </div>
+</div>
+
+<div id="vb" class="hidden">
+  ⚠️ &nbsp;<strong>No Has Verificado Tu Correo.</strong>
+  <button class="vx" onclick="hideBanner()">✕</button>
+</div>
+
+<header id="hdr" class="hidden">
+  <div class="logo">UNCOPYLOCKED.NET</div>
+  <nav>
+    <a href="#" class="on">📂 Explorar</a>
+    <a href="#">❓ Ayuda</a>
+    <a href="#">🛒 Tienda</a>
+    <a href="#">📊 Actividad</a>
+  </nav>
+  <div class="sw">
+    <span style="font-size:.82rem">🔍</span>
+    <input type="text" id="si" placeholder="Buscar archivos..." oninput="onSearch()">
+  </div>
+  <div class="ua">
+    <div class="ib" onclick="openUpload()" title="Subir archivo">⬆️</div>
+    <div class="ib" onclick="openSettings()" title="Ajustes">⚙️</div>
+    <div class="ib hidden" id="admb" onclick="openAdmin()" style="border-color:rgba(239,68,68,.38);" title="Admin">🛡️</div>
+    <div class="uc">
+      <div class="av" id="av"></div>
+      <span id="un"></span>
+      <span class="vb hidden" id="vbg" title="Usuario Verificado">✔</span>
+    </div>
+    <div class="ib" onclick="doLogout()" title="Salir">🚪</div>
+  </div>
+</header>
+
+<main id="mapp" class="hidden">
+  <div class="content">
+    <div class="catbar">
+      <button class="catb on" onclick="setCat('all',this)">🚀 Todos</button>
+      <button class="catb" onclick="setCat('game',this)">🎮 Juegos</button>
+      <button class="catb" onclick="setCat('map',this)">🗺️ Mapas</button>
+      <button class="catb" onclick="setCat('model',this)">🧱 Modelos</button>
+      <button class="catb" onclick="setCat('script',this)">📜 Scripts</button>
+    </div>
+    <div class="sec">LO MÁS NUEVO</div>
+    <div class="fg" id="fg"></div>
+  </div>
+  <div class="sidebar">
+    <div class="sc">
+      <div class="ch">Límite de Descargas</div>
+      <div style="font-size:.7rem;color:var(--muted);margin-bottom:5px;letter-spacing:1px;">DESCARGAS DIARIAS</div>
+      <div class="bn" id="dln">0</div>
+      <div style="font-size:.72rem;color:var(--muted);margin:4px 0 8px;">/ 6 por día</div>
+      <div class="dlb"><div class="dlf" id="dlf"></div></div>
+      <div style="font-size:.72rem;color:var(--muted);margin-top:7px;">
+        ¿Necesitas más? 
+        <a href="https://www.roblox.com/es/game-pass/1721454042/VIP" target="_blank" style="color:var(--acc);text-decoration:none;font-weight:bold;">Suscribirse</a>
+      </div>
+    </div>
+    <div class="sc">
+      <div class="ch">Estadísticas</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+        <div><div class="bn" id="stf" style="font-size:1.4rem">0</div><div style="font-size:.7rem;color:var(--muted)">Archivos</div></div>
+        <div><div class="bn" id="stu" style="font-size:1.4rem">0</div><div style="font-size:.7rem;color:var(--muted)">Usuarios</div></div>
+        <div><div class="bn" id="str" style="font-size:1.4rem">0</div><div style="font-size:.7rem;color:var(--muted)">Reseñas</div></div>
+      </div>
+      <div style="padding-top:9px;border-top:1px solid rgba(255,255,255,.05);font-size:.72rem;color:var(--muted);">
+        Último: <span id="stl" style="color:var(--acc);font-weight:700;"></span>
+      </div>
+    </div>
+    <div class="sc">
+      <div class="ch">Nota</div>
+      <div style="font-size:.78rem;color:var(--muted);line-height:1.6;">Todos los archivos son revisados antes de publicarse. Sólo el <span style="color:var(--acc)">admin</span> puede aprobarlos y asignar verificaciones.</div>
+    </div>
+  </div>
+</main>
+
+<div class="mover hidden" id="fmo" onclick="maybeClose(event,'fmo')">
+  <div class="mi" onclick="event.stopPropagation()">
+    <div class="mh">
+      <div>
+        <div class="mt" id="mmt"></div>
+        <div class="ms" id="mms"></div>
+        <div id="mma" style="font-size:.74rem;color:var(--muted);margin-top:5px;"></div>
+      </div>
+      <button class="xb" onclick="closeModal('fmo')">✕</button>
+    </div>
+    <div class="mb">
+      <div class="tlg" id="mth"></div>
+      <div id="mde" style="font-size:.86rem;color:var(--muted);line-height:1.6;margin-bottom:15px;"></div>
+      <button class="dlbtn" onclick="doDownload()">⬇️ &nbsp;DESCARGAR ARCHIVO</button>
+      <div id="aact" class="ar hidden">
+        <button class="btn bs" style="font-size:.72rem;padding:8px 13px;" onclick="admApprove()">✓ Aprobar</button>
+        <button class="btn br" style="font-size:.72rem;padding:8px 13px;" onclick="admReject()">✕ Rechazar</button>
+        <button onclick="admVerifyAuthor()" style="padding:8px 13px;background:rgba(29,155,240,.14);border:1px solid rgba(29,155,240,.4);color:var(--blue);border-radius:8px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.72rem;transition:all .2s;">✔ Verificar Usuario</button>
+      </div>
+      <div class="rch">RESEÑAS</div>
+      <div id="rl"></div>
+      <div class="addrev">
+        <div style="font-size:.82rem;font-weight:600;color:var(--muted);margin-bottom:9px;">Escribe una reseña:</div>
+        <div class="srow" id="srow">
+          <button class="sb" onclick="setStar(1)">★</button>
+          <button class="sb" onclick="setStar(2)">★</button>
+          <button class="sb" onclick="setStar(3)">★</button>
+          <button class="sb" onclick="setStar(4)">★</button>
+          <button class="sb on" onclick="setStar(5)">★</button>
+        </div>
+        <textarea id="rin" class="inp" rows="3" placeholder="Tu opinión sobre este archivo..." style="resize:vertical;"></textarea>
+        <button class="btn bp" style="padding:10px 22px;font-size:.73rem;" onclick="submitReview()">PUBLICAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mover hidden" id="umo" onclick="maybeClose(event,'umo')">
+  <div class="uinner" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-family:'Orbitron',sans-serif;font-size:.9rem;color:var(--acc);">📤 SUBIR ARCHIVO</div>
+      <button class="xb" onclick="closeModal('umo')">✕</button>
+    </div>
+    <div class="pnote">🔍 Los archivos necesitan aprobación del admin antes de aparecer en el sitio.</div>
+    <div class="dz" onclick="document.getElementById('fin').click()">
+      <div style="font-size:2rem;margin-bottom:7px;">📁</div>
+      <div style="font-weight:700;">Haz clic para seleccionar</div>
+      <div style="font-size:.72rem;margin-top:5px;">.rbxl, .rbxlx, .lua, .zip</div>
+      <input type="file" id="fin" style="display:none;" accept=".rbxl,.rbxlx,.lua,.zip" onchange="fileSelected(this)">
+    </div>
+    <div id="seli" class="si hidden">
+      <div style="font-weight:700;font-size:.88rem;" id="seln"></div>
+      <div style="font-size:.72rem;color:var(--muted);margin-top:2px;" id="sele"></div>
+    </div>
+    <input class="inp" type="text" id="udesc" placeholder="Descripción (opcional)">
+    <div style="display:flex;gap:9px;margin-top:4px;">
+      <select class="inp" id="ucat" style="flex:1;">
+        <option value="game">🎮 Juego</option>
+        <option value="map">🗺️ Mapa</option>
+        <option value="model">🧱 Modelo</option>
+        <option value="script">📜 Script</option>
+      </select>
+      <button class="btn bp" onclick="doUpload()" style="padding:12px 20px;font-size:.73rem;">ENVIAR</button>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="sp">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <div class="ph" style="color:var(--acc);margin:0;">⚙️ AJUSTES</div>
+    <button class="xb" onclick="closeSettings()">✕</button>
+  </div>
+  <div class="srow2">
+    <div><div class="slb">Tema Oscuro / Claro</div><div class="ssb">Cambiar apariencia del sitio</div></div>
+    <label class="tog"><input type="checkbox" id="thtog" onchange="applyTheme(this.checked)"><div class="tt"></div></label>
+  </div>
+  <div class="srow2">
+    <div><div class="slb">Efecto Aero Glass</div><div class="ssb">Desenfoque translúcido en paneles</div></div>
+    <label class="tog"><input type="checkbox" id="aetog" checked onchange="applyAero(this.checked)"><div class="tt"></div></label>
+  </div>
+  <div class="srow2">
+    <div><div class="slb">Brillo al Cursor</div><div class="ssb">Ilumina tarjetas al pasar el mouse</div></div>
+    <label class="tog"><input type="checkbox" id="gltog" checked onchange="glowOn=this.checked"><div class="tt"></div></label>
+  </div>
+  <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.05);">
+    <div style="font-size:.68rem;color:var(--muted);letter-spacing:2px;margin-bottom:10px;">CUENTA</div>
+    <button class="btn br bfw" onclick="doLogout()">Cerrar Sesión</button>
+  </div>
+</div>
+
+<div class="panel" id="ap">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+    <div class="ph" style="color:var(--red);margin:0;">🛡️ ADMIN</div>
+    <button class="xb" onclick="closeAdmin()">✕</button>
+  </div>
+  <div style="font-size:.7rem;color:rgba(239,68,68,.5);letter-spacing:1px;margin-bottom:18px;">PANEL DE CONTROL</div>
+  <div style="font-size:.68rem;color:var(--muted);letter-spacing:2px;margin-bottom:9px;">ARCHIVOS PENDIENTES</div>
+  <div id="plist"></div>
+  <div style="margin-top:16px;padding-top:13px;border-top:1px solid rgba(255,255,255,.06);font-size:.68rem;color:var(--muted);letter-spacing:2px;margin-bottom:9px;">USUARIOS</div>
+  <div id="ulist"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const AMAIL='admin@uncopylocked.net', APASS='admin123';
+const SH=true;
+let S={users:[],files:[],reviews:[]}, sess=null, cfid=null, selSt=5, glowOn=true, upFile=null;
+
+// CAMBIO: Almacenamiento con LocalStorage real (guarda cuentas tras salir)
+async function sg(k,def){
+  try{ const r = localStorage.getItem(k); return r ? JSON.parse(r) : def; }
+  catch(e){ return def; }
+}
+async function ss(k,v){
+  try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){}
+}
+
+// Defaults
+const DF=[
+  {id:'f1',name:'Bite by Daylight Thing',fmt:'rbxl',cat:'game',icon:'🧟',
+   desc:'Juego de terror estilo Dead by Daylight para Roblox. Escapa del monstruo usando objetos y trampas. Mapa incluido con iluminación atmosférica.',
+   author:'Admin',authorId:'admin',dls:47,approved:true,date:'30/05/2026'},
+  {id:'f2',name:'Abandoned Mansion Killer',fmt:'rbxl',cat:'map',icon:'🏚️',
+   desc:'Mapa detallado de mansión abandonada con efectos de sonido y iluminación tenebrosa. Ideal para juegos de horror.',
+   author:'Admin',authorId:'admin',dls:31,approved:true,date:'28/05/2026'},
+  {id:'f3',name:'Kamikaze Drone Script',fmt:'lua',cat:'script',icon:'🚁',
+   desc:'Script avanzado de dron kamikaze con físicas realistas, sistema de targeting y efectos de explosión personalizables.',
+   author:'Admin',authorId:'admin',dls:19,approved:true,date:'25/05/2026'},
+];
+const DR=[
+  {fileId:'f1',author:'Admin',authorId:'admin',stars:5,
+   text:'¡Excelente juego! Los controles son fluidos y el ambiente de terror está muy bien logrado. Muy recomendado.',date:'30/05/2026'}
+];
+
+async function init(){
+  S.users  = await sg('ucl:users',   [{id:'admin',name:'Admin',email:AMAIL,pass:APASS,verified:true,emailVerified:true,isAdmin:true}]);
+  S.files  = await sg('ucl:files',   DF);
+  S.reviews= await sg('ucl:reviews', DR);
+  
+  if(!S.users.find(u=>u.isAdmin)){
+    S.users.push({id:'admin',name:'Admin',email:AMAIL,pass:APASS,verified:true,emailVerified:true,isAdmin:true});
+    await ss('ucl:users',S.users);
+  }
+  const sid = await sg('ucl:session',null);
+  if(sid){ const u = S.users.find(u=>u.id===sid); if(u){ sess=u; showApp(u); return; }}
+  showLogin();
+}
+
+function showLogin(){
+  document.getElementById('loading').style.display='none';
+  document.getElementById('lo').classList.remove('hidden');
+}
+
+function switchTab(t){
+  const isL=t==='login';
+  document.getElementById('fl').classList.toggle('hidden',!isL);
+  document.getElementById('fr').classList.toggle('hidden',isL);
+  document.getElementById('t1').classList.toggle('on',isL);
+  document.getElementById('t2').classList.toggle('on',!isL);
+}
+
+async function doLogin(){
+  const e=document.getElementById('le').value.trim(), p=document.getElementById('lp').value;
+  if(!e||!p){ toast('Completa todos los campos.','terr'); return; }
+  const u=S.users.find(u=>u.email===e&&u.pass===p);
+  if(!u){ toast('Credenciales incorrectas.','terr'); return; }
+  await ss('ucl:session',u.id); sess=u; showApp(u);
+}
+
+// CAMBIO: Lógica de Registro (foto obligatoria, nombre único, email simulado)
+async function doRegister(){
+  const n = document.getElementById('rn').value.trim();
+  const e = document.getElementById('re').value.trim();
+  const p = document.getElementById('rp').value;
+  const pic = document.getElementById('rpic').files[0];
+
+  if(!n || !e || !p){ toast('Completa todos los campos de texto.','terr'); return; }
+  if(!pic){ toast('Debes subir una foto para verificarte.','terr'); return; }
+
+  // CAMBIO: Comprobar Nombres de Usuario únicos y Correos
+  if(S.users.find(u => u.email.toLowerCase() === e.toLowerCase())){ toast('Ese correo ya está registrado.','terr'); return; }
+  if(S.users.find(u => u.name.toLowerCase() === n.toLowerCase())){ toast('El nombre de usuario ya está en uso. Elige otro.','terr'); return; }
+
+  // CAMBIO: Al tener foto, se verifica de inmediato (emailVerified y verified = true)
+  const nu = {id:'u_'+Date.now(), name:n, email:e, pass:p, verified:true, emailVerified:true, isAdmin:false};
+  S.users.push(nu); 
+  await ss('ucl:users', S.users);
+  
+  document.getElementById('rok').classList.remove('hidden');
+  toast('Verificando foto y preparando correo...','tinf');
+
+  // CAMBIO: Simulación de Correo
+  setTimeout(async () => {
+    alert(`--- SIMULACIÓN DE CORREO RECIBIDO ---\n\nDe: admin@uncopylocked.net\nPara: ${e}\nAsunto: ¡Bienvenido a UNCOPYLOCKED!\n\nHola ${n},\nTu cuenta ha sido creada exitosamente. Como proporcionaste una foto de perfil, tu cuenta ha sido verificada automáticamente y ya no tienes límites restrictivos.\n\n¡Disfruta descargando!`);
+    
+    await ss('ucl:session', nu.id); 
+    sess = nu; 
+    showApp(nu); 
+  }, 2200);
+}
+
+async function doLogout(){
+  await ss('ucl:session',null); sess=null;
+  ['hdr','mapp','vb'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  document.getElementById('sp').classList.remove('open');
+  document.getElementById('ap').classList.remove('open');
+  document.getElementById('lo').classList.remove('hidden');
+}
+
+function showApp(u){
+  document.getElementById('loading').style.display='none';
+  document.getElementById('lo').classList.add('hidden');
+  document.getElementById('hdr').classList.remove('hidden');
+  document.getElementById('mapp').classList.remove('hidden');
+  document.getElementById('av').textContent=u.name[0].toUpperCase();
+  document.getElementById('un').textContent=u.name;
+  document.getElementById('vbg').classList.toggle('hidden',!u.verified);
+  if(u.isAdmin) document.getElementById('admb').classList.remove('hidden');
+  if(!u.emailVerified) document.getElementById('vb').classList.remove('hidden');
+  renderGrid(); updateStats(); updateDL(); adjustH();
+}
+
+// ── GRID ──
+let ccat='all', csearch='';
+function icon(f){ return {rbxl:'🎮',rbxlx:'🎮',lua:'📜',zip:'📦'}[f]||'📁'; }
+
+function renderGrid(){
+  const files=S.files.filter(f=>{
+    if(!f.approved&&!sess?.isAdmin) return false;
+    if(ccat!=='all'&&f.cat!==ccat) return false;
+    if(csearch&&!f.name.toLowerCase().includes(csearch.toLowerCase())) return false;
+    return true;
+  });
+  const g=document.getElementById('fg'); g.innerHTML='';
+  if(!files.length){ g.innerHTML='<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--muted);font-size:.9rem;">No se encontraron archivos.</div>'; return; }
+  files.forEach((f,i)=>{
+    const c=document.createElement('div'); c.className='fc'; c.style.animationDelay=(i*.05)+'s';
+    c.innerHTML=`<div class="cg"></div><div class="ft">${icon(f.fmt)}</div>
+    <div class="fi"><div class="fn">${f.name}</div><div class="fe">.${f.fmt.toUpperCase()} &nbsp;•&nbsp; ${f.cat}</div>
+    <div class="ff"><span class="fdl">⬇️ ${f.dls}</span>${!f.approved?'<span class="bpend">⏳ Pendiente</span>':''}</div></div>`;
+    c.addEventListener('click',()=>openFile(f.id));
+    c.addEventListener('mousemove',e=>{
+      if(!glowOn) return;
+      const r=c.getBoundingClientRect();
+      c.style.setProperty('--gx',((e.clientX-r.left)/r.width*100).toFixed(1)+'%');
+      c.style.setProperty('--gy',((e.clientY-r.top)/r.height*100).toFixed(1)+'%');
+    });
+    g.appendChild(c);
+  });
+}
+
+function setCat(c,b){ ccat=c; document.querySelectorAll('.catb').forEach(x=>x.classList.remove('on')); b.classList.add('on'); renderGrid(); }
+function onSearch(){ csearch=document.getElementById('si').value; renderGrid(); }
+
+// ── FILE MODAL ──
+function openFile(id){
+  const f=S.files.find(f=>f.id===id); if(!f) return; cfid=id;
+  document.getElementById('mmt').textContent=f.name;
+  document.getElementById('mms').textContent=`.${f.fmt.toUpperCase()} — ${f.cat} • ⬇️ ${f.dls} descargas`;
+  const au=S.users.find(u=>u.id===f.authorId);
+  const bd=au?.verified?' <span style="color:var(--blue)">✔</span>':'';
+  document.getElementById('mma').innerHTML=`Por: <strong style="color:var(--acc)">${f.author}</strong>${bd}`;
+  document.getElementById('mde').textContent=f.desc||'';
+  document.getElementById('mth').textContent=icon(f.fmt);
+  document.getElementById('aact').classList.toggle('hidden',!sess?.isAdmin);
+  renderRevs(id);
+  document.getElementById('fmo').classList.remove('hidden');
+}
+
+function renderRevs(fid){
+  const rs=S.reviews.filter(r=>r.fileId===fid);
+  const el=document.getElementById('rl');
+  el.innerHTML=rs.length?rs.map(r=>{
+    const u=S.users.find(u=>u.id===r.authorId);
+    const b=u?.verified?' <span style="color:var(--blue);font-size:.76rem">✔</span>':'';
+    return `<div class="rcard"><div class="rau">${r.author}${b}</div>
+    <div class="rst">${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</div>
+    <div class="rtx">${r.text}</div></div>`;
+  }).join(''):'<div style="color:var(--muted);font-size:.82rem;padding:10px 0;">Sé el primero en dejar una reseña.</div>';
+}
+
+function setStar(n){ selSt=n; document.querySelectorAll('.sb').forEach((b,i)=>b.classList.toggle('on',i<n)); }
+
+async function submitReview(){
+  if(!sess) return;
+  const tx=document.getElementById('rin').value.trim();
+  if(!tx){ toast('Escribe algo en la reseña.','terr'); return; }
+  if(S.reviews.find(r=>r.fileId===cfid&&r.authorId===sess.id)){ toast('Ya tienes una reseña aquí.','terr'); return; }
+  S.reviews.push({fileId:cfid,author:sess.name,authorId:sess.id,stars:selSt,text:tx,date:new Date().toLocaleDateString('es')});
+  await ss('ucl:reviews',S.reviews);
+  document.getElementById('rin').value='';
+  renderRevs(cfid); updateStats(); toast('¡Reseña publicada!','tok');
+}
+
+// ── DOWNLOAD ──
+async function doDownload(){
+  const f=S.files.find(f=>f.id===cfid); if(!f) return;
+  const today=new Date().toDateString(), dk='ucl:dl:'+sess.id;
+  const dd=await sg(dk,{});
+  const used=dd[today]||0;
+  if(used>=6){ toast('Límite diario alcanzado (6/6).','terr'); return; }
+  dd[today]=used+1; await ss(dk,dd);
+  f.dls++; await ss('ucl:files',S.files);
+  updateDL(); renderGrid(); renderRevs(cfid);
+  document.getElementById('mms').textContent=`.${f.fmt.toUpperCase()} — ${f.cat} • ⬇️ ${f.dls} descargas`;
+  toast(`⬇️ Descargando ${f.name}.${f.fmt}…`,'tinf');
+}
+
+async function updateDL(){
+  if(!sess) return;
+  const today=new Date().toDateString();
+  const dd=await sg('ucl:dl:'+sess.id,{});
+  const used=dd[today]||0;
+  document.getElementById('dln').textContent=used;
+  setTimeout(()=>{ document.getElementById('dlf').style.width=Math.min((used/6)*100,100)+'%'; },150);
+}
+
+// ── UPLOAD ──
+function openUpload(){
+  if(!sess?.emailVerified&&!sess?.isAdmin){ toast('Verifica tu correo primero.','terr'); return; }
+  upFile=null; document.getElementById('seli').classList.add('hidden');
+  document.getElementById('umo').classList.remove('hidden');
+}
+function fileSelected(inp){
+  upFile=inp.files[0]; if(!upFile) return;
+  const ex=upFile.name.split('.').pop().toLowerCase();
+  document.getElementById('seln').textContent=upFile.name;
+  document.getElementById('sele').textContent=`.${ex.toUpperCase()} • ${(upFile.size/1024).toFixed(1)} KB`;
+  document.getElementById('seli').classList.remove('hidden');
+}
+async function doUpload(){
+  if(!upFile){ toast('Selecciona un archivo.','terr'); return; }
+  const ex=upFile.name.split('.').pop().toLowerCase();
+  const base=upFile.name.replace('.'+ex,'').replace(/_/g,' ');
+  const nf={id:'f_'+Date.now(),name:base,fmt:ex,cat:document.getElementById('ucat').value,
+    icon:icon(ex),desc:document.getElementById('udesc').value||'Sin descripción.',
+    author:sess.name,authorId:sess.id,dls:0,approved:sess.isAdmin,date:new Date().toLocaleDateString('es')};
+  S.files.push(nf); await ss('ucl:files',S.files);
+  closeModal('umo'); renderGrid(); renderAdminPanel(); updateStats();
+  toast(sess.isAdmin?'¡Archivo publicado!':'Enviado — pendiente de aprobación.','tok');
+}
+
+// ── ADMIN ──
+function openAdmin(){ renderAdminPanel(); document.getElementById('ap').classList.add('open'); }
+function closeAdmin(){ document.getElementById('ap').classList.remove('open'); }
+
+function renderAdminPanel(){
+  if(!sess?.isAdmin) return;
+  const pend=S.files.filter(f=>!f.approved);
+  document.getElementById('plist').innerHTML=pend.length?pend.map(f=>`
+    <div class="admi">
+      <div style="font-weight:700;font-size:.86rem;">${f.name}</div>
+      <div style="font-size:.72rem;color:var(--muted);">.${f.fmt.toUpperCase()} — ${f.author}</div>
+      <div class="aar">
+        <button class="btn bs" style="flex:1;font-size:.72rem;padding:6px;" onclick="qApprove('${f.id}')">✓ Aprobar</button>
+        <button class="btn br" style="flex:1;font-size:.72rem;padding:6px;" onclick="qReject('${f.id}')">✕ Rechazar</button>
+      </div>
+    </div>`).join(''):'<div style="color:var(--muted);font-size:.82rem;">No hay archivos pendientes.</div>';
+
+  const nu=S.users.filter(u=>!u.isAdmin);
+  document.getElementById('ulist').innerHTML=nu.length?nu.map(u=>`
+    <div class="urow">
+      <div class="av" style="width:29px;height:29px;font-size:.72rem;flex-shrink:0">${u.name[0].toUpperCase()}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.84rem;font-weight:700">${u.name}${u.verified?' <span style="color:var(--blue)">✔</span>':''}</div>
+        <div style="font-size:.7rem;color:var(--muted)">${u.emailVerified?'✉️ Verificado':'⚠️ Sin verificar'}</div>
+      </div>
+      <button onclick="tVerify('${u.id}')" style="padding:5px 8px;background:rgba(29,155,240,.13);border:1px solid rgba(29,155,240,.38);color:var(--blue);border-radius:7px;cursor:pointer;font-size:.7rem;font-family:'Rajdhani',sans-serif;font-weight:700;white-space:nowrap;transition:all .2s;">
+        ${u.verified?'Quitar ✔':'Dar ✔'}
+      </button>
+    </div>`).join(''):'<div style="color:var(--muted);font-size:.82rem;">No hay usuarios.</div>';
+}
+
+async function qApprove(id){
+  const f=S.files.find(f=>f.id===id); if(!f) return; f.approved=true;
+  await ss('ucl:files',S.files); renderGrid(); renderAdminPanel(); updateStats(); toast('Archivo aprobado.','tok');
+}
+async function qReject(id){
+  S.files=S.files.filter(f=>f.id!==id); await ss('ucl:files',S.files);
+  renderGrid(); renderAdminPanel(); updateStats(); toast('Archivo rechazado.','terr');
+}
+async function admApprove(){ await qApprove(cfid); closeModal('fmo'); }
+async function admReject(){ await qReject(cfid); closeModal('fmo'); }
+async function admVerifyAuthor(){
+  const f=S.files.find(f=>f.id===cfid); if(!f) return; await tVerify(f.authorId); openFile(cfid);
+}
+async function tVerify(uid){
+  const u=S.users.find(u=>u.id===uid); if(!u) return;
+  u.verified=!u.verified; await ss('ucl:users',S.users);
+  if(sess?.id===uid){ sess.verified=u.verified; document.getElementById('vbg').classList.toggle('hidden',!u.verified); }
+  renderAdminPanel(); toast(u.verified?`✔ Verificado: ${u.name}`:'Verificación removida.','tok');
+}
+
+// ── STATS ──
+function updateStats(){
+  const af=S.files.filter(f=>f.approved);
+  document.getElementById('stf').textContent=af.length;
+  document.getElementById('stu').textContent=S.users.length;
+  document.getElementById('str').textContent=S.reviews.length;
+  if(af.length){ const l=[...af].sort((a,b)=>b.id>a.id?1:-1)[0]; document.getElementById('stl').textContent=l.name.length>16?l.name.slice(0,16)+'…':l.name; }
+}
+
+// ── SETTINGS ──
+function openSettings(){ document.getElementById('sp').classList.add('open'); }
+function closeSettings(){ document.getElementById('sp').classList.remove('open'); }
+function applyTheme(l){ document.body.setAttribute('data-theme',l?'light':'dark'); }
+function applyAero(on){ document.body.setAttribute('data-aero',on?'on':'off'); }
+
+// ── BANNER & HEADER ADJ ──
+function hideBanner(){ document.getElementById('vb').classList.add('hidden'); adjustH(); }
+function adjustH(){
+  const vis=!document.getElementById('vb').classList.contains('hidden');
+  document.getElementById('hdr').style.top=vis?'40px':'0';
+  document.getElementById('sp').style.top=vis?'100px':'60px';
+  document.getElementById('ap').style.top=vis?'100px':'60px';
+}
+new MutationObserver(adjustH).observe(document.getElementById('vb'),{attributes:true,attributeFilter:['class']});
+
+// ── MODAL HELPERS ──
+function closeModal(id){ document.getElementById(id).classList.add('hidden'); }
+function maybeClose(e,id){ if(e.target===document.getElementById(id)) closeModal(id); }
+
+// ── TOAST ──
+let tt;
+function toast(msg,cls=''){
+  const el=document.getElementById('toast'); el.textContent=msg; el.className='toast show '+(cls||'tinf');
+  clearTimeout(tt); tt=setTimeout(()=>el.classList.remove('show'),3200);
+}
+
+// ── START ──
+window.addEventListener('DOMContentLoaded',()=>setTimeout(init,1600));
+</script>
+</body>
+</html>
